@@ -1,0 +1,4 @@
+(executable
+ (public_name shiva)
+ (name main)
+ (libraries cmd))
