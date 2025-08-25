@@ -12,3 +12,4 @@ let new_connection () =
   conn
 
 let get_order = Store.get_order
+let get_sender_document = Store.get_sender_document
