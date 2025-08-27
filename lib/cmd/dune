@@ -1,3 +1,3 @@
 (library
  (name cmd)
- (libraries senda money_transfer))
+ (libraries senda money_transfer aws))

@@ -1,7 +1,8 @@
-type app = Senda
+type app = Senda | Epgw
 
 let parse_app = function
   | "senda" -> Senda
+  | "epgw" -> Epgw
   | app -> failwith ("invalid app: " ^ app)
 
 let get_app app_str = app_str |> String.lowercase_ascii |> parse_app
@@ -13,4 +14,5 @@ let run () =
       let app = get_app Sys.argv.(1) in
       match app with
       | Senda -> Sys.argv.(2) |> Cmd_senda.get_command |> Cmd_senda.exec_cmd
+      | Epgw -> Sys.argv.(2) |> Cmd_epgw.get_command |> Cmd_epgw.exec_cmd
     with Failure msg -> Help.usage msg
