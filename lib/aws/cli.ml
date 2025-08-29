@@ -7,25 +7,6 @@ type instance_change_state = {
   previous_state : instance_state;
 }
 
-let read_all_in ic =
-  let buf = Buffer.create 4096 in
-  (try
-     while true do
-       Buffer.add_channel buf ic 4096
-     done
-   with End_of_file -> ());
-  Buffer.contents buf
-
-let run_and_capture cmd =
-  let ic = Unix.open_process_in cmd in
-  let out = read_all_in ic in
-  match Unix.close_process_in ic with
-  | Unix.WEXITED 0 -> out |> String.trim
-  | Unix.WEXITED code ->
-      failwith (Printf.sprintf "command exited %d: %s" code out)
-  | Unix.WSIGNALED s -> failwith (Printf.sprintf "command signaled %d" s)
-  | Unix.WSTOPPED s -> failwith (Printf.sprintf "command stopped %d" s)
-
 let parse_state = function
   | 0 -> Pending
   | 16 -> Running
@@ -65,18 +46,18 @@ let describe_instance instance_ids =
     "aws ec2 describe-instances --instance-ids " ^ instance_ids
     ^ " | jq -r '.Reservations[0].Instances[0]'"
   in
-  run_and_capture cmd |> parse_instance
+  Exec.run_and_capture cmd |> parse_instance
 
 let start_instance instance_id =
   let cmd =
     "aws ec2 start-instances --instance-ids " ^ instance_id
     ^ " | jq -r '.StartingInstances[0]'"
   in
-  run_and_capture cmd |> parse_change_state_instance
+  Exec.run_and_capture cmd |> parse_change_state_instance
 
 let stop_instance instance_id =
   let cmd =
     "aws ec2 stop-instances --instance-ids " ^ instance_id
     ^ " | jq -r '.StoppingInstances[0]'"
   in
-  run_and_capture cmd |> parse_change_state_instance
+  Exec.run_and_capture cmd |> parse_change_state_instance

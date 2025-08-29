@@ -1,3 +1,3 @@
 (library
  (name aws)
- (libraries unix yojson))
+ (libraries exec yojson))
