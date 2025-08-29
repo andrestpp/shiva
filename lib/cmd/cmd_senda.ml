@@ -12,7 +12,7 @@ let get_command cmd_str = cmd_str |> String.lowercase_ascii |> parse_cmd
 
 let cli_send_transfer order_id =
   Printf.sprintf
-    "./cli queue -t moneyTransfer.sendTransfer -d '{\"orderId\":%d}" order_id
+    "./cli queue -t moneyTransfer.sendTransfer -d '{\"orderId\":%d}'" order_id
 
 let send_transfer order_code _verbose =
   (* select id from bookings where "bankOrderCode"='TXF8D4zXlJ3Mw0'; *)
