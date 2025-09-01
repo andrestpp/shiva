@@ -5,7 +5,7 @@ let state_to_string = function
   | Cli.Stopping -> "stopping"
   | Cli.Terminated -> "terminated"
 
-let rec wait_for (instance: Cli.instance) expected_state =
+let rec wait_for (instance : Cli.instance) expected_state =
   match (instance.state, expected_state) with
   | Cli.Pending, Cli.Running ->
       print_endline "waiting for instance to start";
@@ -29,16 +29,18 @@ let start_instance instance_id =
   | Stopping -> (
       let instance = wait_for instance Cli.Stopped in
       let res = Cli.start_instance instance_id in
-      match res.current_state with
-      | Cli.Pending -> wait_for instance Cli.Running
-      | Cli.Running -> instance
+      let updated_instance = { instance with state = res.current_state } in
+      match updated_instance.state with
+      | Cli.Pending -> wait_for updated_instance Cli.Running
+      | Cli.Running -> updated_instance
       | _ -> failwith "invalid state")
   | Terminated -> failwith "instance is terminated"
   | Stopped -> (
       let res = Cli.start_instance instance_id in
-      match res.current_state with
-      | Cli.Pending -> wait_for instance Cli.Running
-      | Cli.Running -> instance
+      let updated_instance = { instance with state = res.current_state } in
+      match updated_instance.state with
+      | Cli.Pending -> wait_for updated_instance Cli.Running
+      | Cli.Running -> updated_instance
       | _ -> failwith "invalid state")
 
 let stop_instance instance_id =
@@ -47,15 +49,17 @@ let stop_instance instance_id =
   | Pending -> (
       let instance = wait_for instance Cli.Running in
       let res = Cli.stop_instance instance_id in
-      match res.current_state with
-      | Cli.Stopping -> wait_for instance Cli.Stopped
-      | Cli.Stopped -> instance
+      let updated_instance = { instance with state = res.current_state } in
+      match updated_instance.state with
+      | Cli.Stopping -> wait_for updated_instance Cli.Stopped
+      | Cli.Stopped -> updated_instance
       | _ -> failwith "invalid state")
   | Running -> (
       let res = Cli.stop_instance instance_id in
-      match res.current_state with
-      | Cli.Stopping -> wait_for instance Cli.Stopped
-      | Cli.Stopped -> instance
+      let updated_instance = { instance with state = res.current_state } in
+      match updated_instance.state with
+      | Cli.Stopping -> wait_for updated_instance Cli.Stopped
+      | Cli.Stopped -> updated_instance
       | _ -> failwith "invalid state")
   | Stopping -> wait_for instance Cli.Stopped
   | Terminated -> failwith "instance is terminated"
@@ -65,7 +69,7 @@ let stop_instance instance_id =
 let rm_security_group_ingress sg_id description =
   let permissions = Cli.describe_security_group sg_id in
   List.iter
-    (fun (permission: Cli.security_group_permission) ->
+    (fun (permission : Cli.security_group_permission) ->
       match permission.description with
       | Some description' when description = description' ->
           let _ =
