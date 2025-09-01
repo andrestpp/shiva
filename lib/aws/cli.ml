@@ -73,9 +73,8 @@ let stop_instance instance_id =
 let add_security_group_ingress sg_id protocol port cidr description =
   let cmd =
     Printf.sprintf
-      "aws ec2 authorize-security-group-ingress --group-id %s --protocol %s \
-       --port %d --cidr %s --description %s"
-      sg_id protocol port cidr description
+      "aws ec2 authorize-security-group-ingress --group-id \"%s\" --ip-permissions IpProtocol=%s,FromPort=%d,ToPort=%d,IpRanges=\"[{CidrIp=%s,Description=%s}]\""
+      sg_id protocol port port cidr description
   in
   Exec.run_and_capture cmd
 
@@ -110,7 +109,7 @@ let parse_security_group_permissions ip_permissions_str =
   let json = Yojson.Basic.from_string ip_permissions_str in
   json |> Yojson.Basic.Util.to_list |> List.map parse_permission |> List.flatten
 
-let describe_security_group (sg_id: string): security_group_permission list =
+let describe_security_group (sg_id : string) : security_group_permission list =
   let cmd =
     "aws ec2 describe-security-groups --group-ids " ^ sg_id
     ^ " | jq -r '.SecurityGroups[0].IpPermissions'"

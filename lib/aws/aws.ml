@@ -5,17 +5,18 @@ let state_to_string = function
   | Cli.Stopping -> "stopping"
   | Cli.Terminated -> "terminated"
 
-let rec wait_for instance_id expected_state =
-  let instance = Cli.describe_instance instance_id in
+let rec wait_for (instance: Cli.instance) expected_state =
   match (instance.state, expected_state) with
   | Cli.Pending, Cli.Running ->
       print_endline "waiting for instance to start";
       let () = Unix.sleep 2 in
-      wait_for instance_id expected_state
+      let instance = Cli.describe_instance instance.id in
+      wait_for instance expected_state
   | Cli.Stopping, Cli.Stopped ->
       print_endline "waiting for instance to stop";
       let () = Unix.sleep 2 in
-      wait_for instance_id expected_state
+      let instance = Cli.describe_instance instance.id in
+      wait_for instance expected_state
   | Cli.Running, Cli.Running -> instance
   | Cli.Stopped, Cli.Stopped -> instance
   | _, _ -> instance
@@ -23,20 +24,20 @@ let rec wait_for instance_id expected_state =
 let start_instance instance_id =
   let instance = Cli.describe_instance instance_id in
   match instance.state with
-  | Pending -> wait_for instance_id Cli.Running
+  | Pending -> wait_for instance Cli.Running
   | Running -> instance
   | Stopping -> (
-      let instance = wait_for instance_id Cli.Stopped in
+      let instance = wait_for instance Cli.Stopped in
       let res = Cli.start_instance instance_id in
       match res.current_state with
-      | Cli.Pending -> wait_for instance_id Cli.Running
+      | Cli.Pending -> wait_for instance Cli.Running
       | Cli.Running -> instance
       | _ -> failwith "invalid state")
   | Terminated -> failwith "instance is terminated"
   | Stopped -> (
       let res = Cli.start_instance instance_id in
       match res.current_state with
-      | Cli.Pending -> wait_for instance_id Cli.Running
+      | Cli.Pending -> wait_for instance Cli.Running
       | Cli.Running -> instance
       | _ -> failwith "invalid state")
 
@@ -44,19 +45,19 @@ let stop_instance instance_id =
   let instance = Cli.describe_instance instance_id in
   match instance.state with
   | Pending -> (
-      let instance = wait_for instance_id Cli.Running in
+      let instance = wait_for instance Cli.Running in
       let res = Cli.stop_instance instance_id in
       match res.current_state with
-      | Cli.Stopping -> wait_for instance_id Cli.Stopped
+      | Cli.Stopping -> wait_for instance Cli.Stopped
       | Cli.Stopped -> instance
       | _ -> failwith "invalid state")
   | Running -> (
       let res = Cli.stop_instance instance_id in
       match res.current_state with
-      | Cli.Stopping -> wait_for instance_id Cli.Stopped
+      | Cli.Stopping -> wait_for instance Cli.Stopped
       | Cli.Stopped -> instance
       | _ -> failwith "invalid state")
-  | Stopping -> wait_for instance_id Cli.Stopped
+  | Stopping -> wait_for instance Cli.Stopped
   | Terminated -> failwith "instance is terminated"
   | Stopped -> instance
 
