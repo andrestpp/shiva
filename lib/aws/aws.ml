@@ -59,3 +59,21 @@ let stop_instance instance_id =
   | Stopping -> wait_for instance_id Cli.Stopped
   | Terminated -> failwith "instance is terminated"
   | Stopped -> instance
+
+(* Remove security group ingress that matches the description. *)
+let rm_security_group_ingress sg_id description =
+  let permissions = Cli.describe_security_group sg_id in
+  List.iter
+    (fun (permission: Cli.security_group_permission) ->
+      match permission.description with
+      | Some description' when description = description' ->
+          let _ =
+            Cli.rm_security_group_ingress sg_id permission.protocol
+              permission.from_port permission.cidr
+          in
+          ()
+      | _ -> ())
+    permissions
+
+(* TODO: validate all type parameters *)
+let add_security_group_ingress = Cli.add_security_group_ingress
