@@ -1,9 +1,9 @@
-type order = { id : int; sender_id : int }
+type order = { id : int; sender_id : int; order_reference : int }
 
 let get_order_query order_reference =
   Printf.sprintf
-    "SELECT id,\"senderId\" FROM \"BankDepositOrders\" WHERE \
-     \"orderReference\"='%d'"
+    "SELECT id,\"senderId\",\"orderReference\" FROM \"BankDepositOrders\" \
+     WHERE \"orderReference\"='%d'"
     order_reference
 
 let get_order (conn : Postgresql.connection) (order_ref : int) =
@@ -14,7 +14,8 @@ let get_order (conn : Postgresql.connection) (order_ref : int) =
   else
     let id = select_res#getvalue 0 0 |> int_of_string in
     let sender_id = select_res#getvalue 0 1 |> int_of_string in
-    { id; sender_id }
+    let order_reference = select_res#getvalue 0 2 |> int_of_string in
+    { id; sender_id; order_reference }
 
 let get_sender_document_query sender_id =
   Printf.sprintf

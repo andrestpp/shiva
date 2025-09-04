@@ -13,6 +13,7 @@ Examples:
 
 shiva senda send_transfast_email --order_code TXF8D4zXlJ3Mw0
 shiva senda send_transfer --order_code TXF8D4zXlJ3Mw0
+shiva senda order_status --order_code TXF8D4zXlJ3Mw0
 shiva epgw connect_db
 shiva epgw disconnect_db
 "
